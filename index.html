@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ACI Concrete Analyzer - AR Concrete v1.0</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+    --main-blue: #0078D4;
+    --dark-blue: #005A9E;
+    --success-green: #2e7d32;
+    --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    direction: rtl;
+    background: var(--bg-gradient);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.app-header {
+    background: var(--main-blue);
+    color: white;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.container { padding: 4px 8px; max-width: 450px; margin: 0 auto; }
+
+.input-card {
+    background: #fff;
+    border: 1px solid #d1d9e0;
+    border-radius: 6px;
+    padding: 1px 8px;
+    margin-bottom: 3px;
+}
+
+label {
+    display: block;
+    font-size: 9px;
+    color: #666;
+    font-weight: bold;
+    margin-bottom: -3px;
+}
+
+input, select {
+    width: 100%;
+    height: 20px; 
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px; 
+    font-weight: 800;
+    color: #000;
+    font-family: 'Arial', sans-serif;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+
+button#calcBtn {
+    width: 100%;
+    background: linear-gradient(to left, var(--main-blue), var(--dark-blue));
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 15px;
+    margin-top: 5px;
+    cursor: pointer;
+}
+
+.share-btn {
+    width: 100%;
+    background: #fff;
+    color: var(--main-blue);
+    border: 2px solid var(--main-blue);
+    padding: 8px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.calib-section {
+    background: rgba(255,255,255,0.8);
+    padding: 10px;
+    border-radius: 12px;
+    margin-top: 8px;
+    border: 1px solid #d1d9e0;
+}
+
+.reset-bar {
+    width: 100%;
+    background: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 0;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.reset-slump { border: 1px solid #ff4d4d; color: #ff4d4d; }
+.reset-strength { border: 1px solid #6f42c1; color: #6f42c1; }
+
+.calib-row { display: flex; gap: 5px; margin-bottom: 12px; align-items: stretch; }
+
+.calib-input {
+    flex: 1;
+    height: 38px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    background: #fdfdfd;
+}
+
+.calib-btn {
+    flex: 0 0 90px;
+    background: var(--main-blue);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.result-box { margin-top: 6px; }
+.good { background: #e8f5e9; color: #2e7d32; padding: 6px 10px; border-radius: 6px; margin-bottom: 3px; border-right: 4px solid #2e7d32; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; }
+</style>
+</head>
+
+<body onload="initApp()">
+
+<div class="app-header">
+    <div style="font-weight: bold; font-size: 14px;"><i class="fas fa-cube"></i> ACI Concrete Analyzer - AR Concrete v1.0</div>
+    <i class="fas fa-wifi"></i>
+</div>
+
+<div class="container">
+    <div class="input-card">
+        <label><i class="fas fa-check-circle"></i> تحديد الصنف</label>
+        <select id="targetC">
+            <option value="C40">C40</option>
+            <option value="C35">C35</option>
+            <option value="C30" selected>C30</option>
+            <option value="C25">C25</option>
+        </select>
+    </div>
+
+    <div class="grid-2">
+        <div class="input-card"><label>الاسمنت (kg)</label><input id="cement" type="number" value="390"></div>
+        <div class="input-card"><label>الماء (L)</label><input id="water" type="number" value="160"></div>
+    </div>
+
+    <div class="grid-2">
+        <div class="input-card"><label>نوع الرمل</label>
+            <select id="sandType">
+                <option value="fine">ناعم</option>
+                <option value="medium" selected>متوسط</option>
+                <option value="coarse">خشن</option>
+            </select>
+        </div>
+        <div class="input-card"><label>الرمل (kg)</label><input id="sandQty" type="number" value="750"></div>
+    </div>
+
+    <div class="grid-2">
+        <div class="input-card"><label>نوع الحصى</label>
+            <select id="gravelType"><option value="round" selected>مدور</option><option value="crushed">مكسر</option></select>
+        </div>
+        <div class="input-card"><label>الحصى (kg)</label><input id="gravelQty" type="number" value="1000"></div>
+    </div>
+
+    <div class="input-card">
+        <label>حالة الحصى</label>
+        <select id="aggMoisture">
+            <option value="ssd" selected>SSD (مشبع)</option>
+            <option value="dry">ناشف (يسحب ماء)</option>
+            <option value="wet">رطب (ماء حر)</option>
+        </select>
+    </div>
+
+    <div class="grid-2">
+        <div class="input-card"><label>المقاس (mm)</label>
+            <select id="aggSize"><option value="10">10 mm</option><option value="20" selected>20 mm</option><option value="40">40 mm</option></select>
+        </div>
+        <div class="input-card"><label>كمية المضاف (L)</label><input id="admQty" type="number" value="2.5" step="0.1"></div>
+    </div>
+
+    <div class="input-card">
+        <label>نوع المضاف</label>
+        <select id="admType">
+            <option value="pce" selected>PCE (HRWR)</option>
+            <option value="sp">SP (HRWR)</option>
+            <option value="p">P (Plasticizer)</option>
+        </select>
+    </div>
+
+    <div class="grid-2">
+        <div class="input-card"><label>حرارة (°C)</label><input id="temp" type="number" value="15"></div>
+        <div class="input-card"><label>رطوبة (%)</label><input id="humidity" type="number" value="50"></div>
+    </div>
+
+    <button id="calcBtn" onclick="mainProcess()">تحليل الخلطة الآن 🔥</button>
+
+    <div id="result" class="result-box"></div>
+
+    <button class="share-btn" onclick="shareReport()">
+        <i class="fas fa-share-nodes"></i> حفظ ومشاركة التقرير
+    </button>
+    
+    <a href="loss.html" style="display:block; text-align:center; margin-top:10px; color:var(--main-blue); font-size:12px; text-decoration:none; font-weight:bold;">تحليل فقدان السلامب مع الزمن ←</a>
+
+    <div class="calib-section">
+        <div class="reset-bar reset-slump" onclick="resetSlumpCalibration()">
+            إلغاء معايرة السلامب <i class="fas fa-undo"></i>
+        </div>
+        <div class="calib-row">
+            <input id="actualSlumpInput" class="calib-input" type="number" placeholder="Actual cm">
+            <button class="calib-btn" onclick="calibrateSlumpTrigger()">
+                <span>معايرة</span><span>سلامب</span>
+            </button>
+        </div>
+
+        <div class="reset-bar reset-strength" onclick="resetStrengthCalibration()">
+            إلغاء معايرة المقاومة <i class="fas fa-undo"></i>
+        </div>
+        <div class="calib-row">
+            <input id="actualStrInput" class="calib-input" type="number" placeholder="Actual MPa">
+            <button class="calib-btn" style="background:#6f42c1" onclick="calibrateStrTrigger()">
+                <span>معايرة</span><span>مقاومة</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let STRENGTH_OFFSET = 0, LAST_THEORETICAL_STRENGTH = 0;
+let SLUMP_OFFSET = 0, LAST_THEORETICAL_SLUMP = 0, SLUMP_CALIBRATED = false;
+
+async function initApp() { 
+    loadCalibration(); 
+    await fetchLiveWeather(); 
+    mainProcess();
+}
+
+async function fetchLiveWeather() {
+  try {
+    const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=30.5&longitude=47.8&current=temperature_2m,relative_humidity_2m&timezone=auto");
+    const data = await res.json();
+    if(data.current) {
+      document.getElementById("temp").value = Math.round(data.current.temperature_2m);
+      document.getElementById("humidity").value = Math.round(data.current.relative_humidity_2m);
+    }
+  } catch (e) { }
+}
+
+function loadCalibration() {
+    SLUMP_OFFSET = parseFloat(localStorage.getItem('SLUMP_OFFSET')) || 0;
+    STRENGTH_OFFSET = parseFloat(localStorage.getItem('STRENGTH_OFFSET')) || 0;
+    SLUMP_CALIBRATED = localStorage.getItem('SLUMP_CALIBRATED') === 'true';
+}
+
+function saveCalibration() {
+    localStorage.setItem('SLUMP_OFFSET', SLUMP_OFFSET);
+    localStorage.setItem('STRENGTH_OFFSET', STRENGTH_OFFSET);
+    localStorage.setItem('SLUMP_CALIBRATED', SLUMP_CALIBRATED);
+}
+
+function resetSlumpCalibration() {
+    SLUMP_OFFSET = 0; SLUMP_CALIBRATED = false;
+    localStorage.removeItem('SLUMP_OFFSET'); localStorage.removeItem('SLUMP_CALIBRATED');
+    mainProcess();
+}
+
+function resetStrengthCalibration() {
+    STRENGTH_OFFSET = 0;
+    localStorage.removeItem('STRENGTH_OFFSET');
+    mainProcess();
+}
+
+function calibrateSlumpTrigger() {
+  const val = parseFloat(document.getElementById("actualSlumpInput").value);
+  if (isNaN(val)) return;
+  SLUMP_OFFSET = val - LAST_THEORETICAL_SLUMP;
+  SLUMP_CALIBRATED = true;
+  saveCalibration();
+  mainProcess();
+}
+
+function calibrateStrTrigger() {
+  const val = parseFloat(document.getElementById("actualStrInput").value);
+  if (isNaN(val)) return;
+  STRENGTH_OFFSET = val - LAST_THEORETICAL_STRENGTH;
+  saveCalibration();
+  mainProcess();
+}
+
+function mainProcess() {
+  const cement = +document.getElementById("cement").value;
+  const water = +document.getElementById("water").value;
+  const sandQty = +document.getElementById("sandQty").value;
+  const sandType = document.getElementById("sandType").value;
+  const gravelQty = +document.getElementById("gravelQty").value;
+  const gravelType = document.getElementById("gravelType").value;
+  const aggSize = document.getElementById("aggSize").value;
+  const admType = document.getElementById("admType").value;
+  const admQty = +document.getElementById("admQty").value;
+  const temp = +document.getElementById("temp").value;
+  const hum = +document.getElementById("humidity").value;
+  const cls = document.getElementById("targetC").value;
+  const aggMoisture = document.getElementById("aggMoisture").value;
+
+  const classData = {
+      'C25': { target: 25 },
+      'C30': { target: 30 },
+      'C35': { target: 35 },
+      'C40': { target: 40 }
+  };
+  const currentClass = classData[cls];
+
+  let slump = 18; 
+  slump += ((water - 160) / 10) * 2.2;
+  slump += (cement - 390) * 0.01;
+  if (admType === "pce") slump += admQty * 2.8;
+  else if (admType === "sp") slump += admQty * 1.6;
+  else if (admType === "p") slump += admQty * 0.8;
+  if (sandType === "fine") slump -= 1.8; 
+  else if (sandType === "coarse") slump += 1.5;
+  slump -= (sandQty - 750) * 0.002;
+  slump -= (gravelQty - 1000) * 0.0015;
+  if (gravelType === "crushed") slump -= 1.5; 
+  if (aggSize === "10") slump -= 1.2;
+  else if (aggSize === "40") slump += 1.0;
+  if (temp > 20) slump -= (temp - 20) * 0.4;
+  else if (temp < 20) slump += (20 - temp) * 0.2;
+  if (hum < 50) slump -= (50 - hum) * 0.04;
+  else if (hum > 70) slump += (hum - 70) * 0.02;
+
+  if (aggMoisture === "dry") { slump -= 2.5; } 
+  else if (aggMoisture === "wet") { slump += 2.0; }
+
+  LAST_THEORETICAL_SLUMP = Math.round(slump * 10) / 10;
+  let finalSlump = Math.round((SLUMP_CALIBRATED ? slump + SLUMP_OFFSET : slump) * 10) / 10;
+
+  let wc = water / cement;
+  let baseStrength = (110 - (160 * wc));
+  if (admType === "pce" && admQty > 2.5) baseStrength -= (admQty - 2.5) * 6;
+  else if (admType === "sp") baseStrength -= admQty * 0.8;
+  if (temp > 25) baseStrength -= ((temp - 25) / 5) * 0.7;
+
+  let sandFactor = 1.0;
+  if (sandType === "fine") sandFactor -= 0.06;
+  else if (sandType === "coarse") sandFactor += 0.02;
+  sandFactor -= (sandQty - 750) * 0.00004;
+
+  let gravelFactor = 1.0;
+  let gDiff = gravelQty - 1000;
+  if (gravelType === "crushed") gravelFactor += 0.04;
+  if (aggSize === "10") gravelFactor -= 0.03;
+  else if (aggSize === "40") gravelFactor -= 0.02;
+  if (Math.abs(gDiff) <= 100) { gravelFactor += 0.01; } else { gravelFactor -= (Math.abs(gDiff) - 100) * 0.00003; }
+
+  baseStrength *= sandFactor; baseStrength *= gravelFactor; baseStrength *= 0.92;
+  LAST_THEORETICAL_STRENGTH = Math.round(baseStrength * 10) / 10;
+  let finalStr = Math.round((LAST_THEORETICAL_STRENGTH + STRENGTH_OFFSET) * 10) / 10;
+  finalStr = Math.max(finalStr, 10);
+
+  let slumpTitle = SLUMP_CALIBRATED ? "بعد المعايرة" : "نظري";
+  let html = `<div class="good"><span>${slumpTitle} سلامب:</span> <span>${finalSlump} cm</span></div>`;
+  html += `<div class="good"><span>مقاومة متوقعة:</span> <span>${finalStr} MPa</span></div>`;
+  let statusText = (finalStr >= currentClass.target) ? `✅ مطابقة لـ ${cls}` : `❌ غير مطابقة لـ ${cls}`;
+  let statusBg = (finalStr >= currentClass.target) ? `#c8e6c9` : `#ffebee`;
+  html += `<div class="good" style="text-align:center; background:${statusBg}; justify-content:center;">${statusText}</div>`;
+  document.getElementById("result").innerHTML = html;
+
+  // --- السطر البرمجي للربط (مخفي) ---
+  localStorage.setItem('slumpMain', JSON.stringify({
+      slump_initial: finalSlump,
+      temp: temp
+  }));
+}
+
+function shareReport() {
+    const reportBody = `📊 تقرير فحص الخرسانة (ACI)
+-------------------------
+📍 الصنف المختار: ${document.getElementById("targetC").value}
+🔸 النتائج المستخرجة:
+- ${document.getElementById("result").innerText}
+تم التحليل بواسطة AR Concrete v1.0`;
+    if (navigator.share) { navigator.share({ title: 'تقرير خلطة خرسانية', text: reportBody }).catch(console.error); } else { alert(reportBody); }
+}
+</script>
+</body>
+</html>
